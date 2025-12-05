@@ -62,39 +62,86 @@ const Hero: React.FC = () => {
         });
       }
 
-      // Animate scrolling text bar
+      // Animate scrolling text bar with seamless infinite loop
       if (scrollingContentRef.current) {
         const content = scrollingContentRef.current;
-        const contentWidth = content.scrollWidth;
         
-        // Create infinite scroll animation
-        gsap.to(content, {
-          x: -contentWidth / 2,
-          duration: 20,
-          ease: 'none',
-          repeat: -1,
-        });
-
-        // Fade in the bar on scroll
-        gsap.fromTo(
-          scrollingBarRef.current,
-          {
-            opacity: 0,
-            y: 20,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: scrollingBarRef.current,
-              start: 'top 90%',
-              toggleActions: 'play none none reverse',
-            },
+        // Wait for layout to calculate accurate widths
+        const calculateAndAnimate = () => {
+          // Force a reflow to ensure accurate measurements
+          void content.offsetWidth;
+          
+          // Get all child elements
+          const children = Array.from(content.children) as HTMLElement[];
+          
+          if (children.length >= 8) {
+            // Calculate the width of one complete set (first 4 items)
+            // Measure from the start of first item to the start of the 5th item (duplicate)
+            const firstItem = children[0];
+            const duplicateStartItem = children[4];
+            
+            if (firstItem && duplicateStartItem) {
+              // Get the exact distance between the start of first set and duplicate set
+              // This includes the width of all 4 items plus the gaps between them
+              const firstSetWidth = duplicateStartItem.offsetLeft - firstItem.offsetLeft;
+              
+              // Verify the calculation is valid
+              if (firstSetWidth > 0) {
+                // Set initial position to 0 with hardware acceleration for smooth performance
+                gsap.set(content, { x: 0, force3D: true });
+                
+                // Create seamless infinite scroll animation
+                // How it works:
+                // 1. We animate from x: 0 to x: -firstSetWidth
+                // 2. At x: -firstSetWidth, the duplicate set is visually at position 0
+                //    (exactly where the original set started)
+                // 3. GSAP's repeat: -1 automatically resets to x: 0
+                // 4. Since the duplicate is now at position 0, the reset is visually seamless
+                gsap.to(content, {
+                  x: -firstSetWidth,
+                  duration: 20,
+                  ease: 'none', // Linear easing for constant speed
+                  repeat: -1, // Infinite repeat
+                  // Disable repeat refresh to prevent recalculation on each loop
+                  // This ensures the animation values stay consistent for seamless looping
+                  repeatRefresh: false,
+                  // Use force3D for GPU acceleration (better performance, smoother animation)
+                  force3D: true,
+                });
+              }
+            }
           }
-        );
+        };
+        
+        // Use double requestAnimationFrame to ensure DOM is fully laid out and measured
+        // This is crucial for accurate width calculations, especially with:
+        // - Responsive gaps (gap-16 sm:gap-32 md:gap-[300px])
+        // - Dynamic font sizes
+        // - Flexbox layout calculations
+        requestAnimationFrame(() => {
+          requestAnimationFrame(calculateAndAnimate);
+        });
       }
+
+      // Fade in the bar on scroll
+      gsap.fromTo(
+        scrollingBarRef.current,
+        {
+          opacity: 0,
+          y: 20,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: scrollingBarRef.current,
+            start: 'top 90%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
     }, sectionRef);
 
     return () => ctx.revert();
@@ -107,48 +154,48 @@ const Hero: React.FC = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="bg-black w-full relative pt-[90px] pb-0">
+    <section ref={sectionRef} className="bg-black w-full relative pt-12 sm:pt-16 md:pt-20 lg:pt-[90px] pb-0 overflow-hidden">
       {/* Top Section - Heading and Reel */}
-      <div className="flex items-start justify-between px-6 py-6 max-w-[1440px] mx-auto">
+      <div className="flex items-start justify-between px-4 sm:px-6 py-4 sm:py-6 max-w-[1440px] mx-auto">
         {/* Left Side - Heading */}
-        <div className="flex-1 max-w-[540px] flex flex-col gap-0 pt-4">
-          <div className="h-[50.59px] overflow-hidden relative w-full">
+        <div className="flex-1 max-w-full sm:max-w-[540px] flex flex-col gap-0 pt-2 sm:pt-4">
+          <div className="h-auto sm:h-[50.59px] overflow-hidden relative w-full">
             <div 
               ref={addToLinesRef}
-              className="absolute top-1/2 -translate-y-1/2 left-0 right-0 mix-blend-difference"
+              className="relative sm:absolute sm:top-1/2 sm:-translate-y-1/2 left-0 right-0 mix-blend-difference"
             >
-              <h1 className="text-[44.8px] font-medium leading-[50.6px] tracking-[-0.8px] text-white whitespace-pre-wrap">
-                Pattern Dimensions
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[44.8px] font-medium leading-tight sm:leading-[50.6px] tracking-tight sm:tracking-[-0.8px] text-white whitespace-pre-wrap">
+                Digital Architectures
               </h1>
             </div>
           </div>
-          <div className="h-[50.59px] overflow-hidden relative w-full">
+          <div className="h-auto sm:h-[50.59px] overflow-hidden relative w-full">
             <div 
               ref={addToLinesRef}
-              className="absolute top-1/2 -translate-y-1/2 left-0 right-0 mix-blend-difference"
+              className="relative sm:absolute sm:top-1/2 sm:-translate-y-1/2 left-0 right-0 mix-blend-difference"
             >
-              <h1 className="text-[44.6px] font-medium leading-[50.6px] tracking-[-0.8px] text-white whitespace-pre-wrap">
-                and Moments that
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[44.6px] font-medium leading-tight sm:leading-[50.6px] tracking-tight sm:tracking-[-0.8px] text-white whitespace-pre-wrap">
+                and Solutions that
               </h1>
             </div>
           </div>
-          <div className="h-[50.59px] flex items-center justify-center overflow-hidden relative w-full">
+          <div className="h-auto sm:h-[50.59px] flex items-center justify-center overflow-hidden relative w-full">
             <div 
               ref={addToLinesRef}
               className="flex-1 mix-blend-difference"
             >
-              <h1 className="text-[46.5px] font-medium leading-[50.6px] tracking-[-0.8px] text-white whitespace-pre-wrap">
-                Connect and Leave a
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[46.5px] font-medium leading-tight sm:leading-[50.6px] tracking-tight sm:tracking-[-0.8px] text-white whitespace-pre-wrap">
+                Transform Ideas into
               </h1>
             </div>
           </div>
-          <div className="h-[50.59px] overflow-hidden relative w-full">
+          <div className="h-auto sm:h-[50.59px] overflow-hidden relative w-full">
             <div 
               ref={addToLinesRef}
-              className="absolute top-1/2 -translate-y-1/2 left-0 right-0 mix-blend-difference"
+              className="relative sm:absolute sm:top-1/2 sm:-translate-y-1/2 left-0 right-0 mix-blend-difference"
             >
-              <h1 className="text-[48px] font-medium leading-[50.6px] tracking-[-0.8px] text-white whitespace-pre-wrap">
-                Bold イメージ.
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[48px] font-medium leading-tight sm:leading-[50.6px] tracking-tight sm:tracking-[-0.8px] text-white whitespace-pre-wrap">
+                Extraordinary 体験.
               </h1>
             </div>
           </div>
@@ -156,42 +203,43 @@ const Hero: React.FC = () => {
       </div>
 
       {/* Middle Section - Scrolling Text Bar */}
-      <div ref={scrollingBarRef} className="absolute left-0 right-0 top-[396px]">
-        <div className="relative w-full h-[24px] bg-white overflow-hidden">
+      <div ref={scrollingBarRef} className="relative sm:absolute left-0 right-0 top-auto sm:top-[300px] md:top-[350px] lg:top-[396px] mt-8 sm:mt-0">
+        <div className="relative w-full h-5 sm:h-6 md:h-[24px] bg-white overflow-hidden">
           <div className="absolute inset-0 bg-white" />
           <div 
             ref={scrollingContentRef}
-            className="flex items-center justify-center gap-[300px] h-full relative z-10"
+            className="flex items-center justify-center gap-16 sm:gap-32 md:gap-[300px] h-full relative z-10"
           >
-            <span className="text-[14.9px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Art Direction
+            <span className="text-xs sm:text-sm md:text-[14.9px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Frontend Development
             </span>
-            <span className="text-[15px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Branding
+            <span className="text-xs sm:text-sm md:text-[15px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Backend Engineering
             </span>
-            <span className="text-[15px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Strategy
+            <span className="text-xs sm:text-sm md:text-[15px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Full-Stack Solutions
             </span>
-            <span className="text-[15px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Web Design
+            <span className="text-xs sm:text-sm md:text-[15px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Cloud Architecture
             </span>
             {/* Duplicate for seamless loop */}
-            <span className="text-[14.9px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Art Direction
+            <span className="text-xs sm:text-sm md:text-[14.9px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Frontend Development
             </span>
-            <span className="text-[15px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Branding
+            <span className="text-xs sm:text-sm md:text-[15px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Backend Engineering
             </span>
-            <span className="text-[15px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Strategy
+            <span className="text-xs sm:text-sm md:text-[15px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Full-Stack Solutions
             </span>
-            <span className="text-[15px] font-semibold leading-[24px] text-black whitespace-nowrap">
-              Web Design
+            <span className="text-xs sm:text-sm md:text-[15px] font-semibold leading-5 sm:leading-6 md:leading-[24px] text-black whitespace-nowrap">
+              Cloud Architecture
             </span>
           </div>
         </div>
       </div>
       <p
+        className="text-8xl sm:text-9xl md:text-[180px] lg:text-[280px] xl:text-[397.193px] font-semibold text-white w-full px-4 sm:px-6 mt-8 sm:mt-12 md:mt-16 lg:mt-[30px]"
         style={{
           boxSizing: "border-box",
           WebkitFontSmoothing: "antialiased",
@@ -200,34 +248,23 @@ const Hero: React.FC = () => {
           fontStyle: "normal",
           fontWeight: "600",
           color: "rgb(255, 255, 255)",
-          fontSize: "397.193px",
-          letterSpacing: "-21.47px",
+          letterSpacing: "clamp(-2px, -0.05em, -21.47px)",
           textTransform: "none",
-          textDecorationSkipInk: "auto",
-          textUnderlineOffset: "auto",
-          lineHeight: "357.474px",
+          lineHeight: "0.9",
           textAlign: "start",
           WebkitTextStrokeWidth: "0px",
           WebkitTextStrokeColor: "rgb(255, 255, 255)",
           fontFeatureSettings:
             '"cv01", "cv02", "cv03", "cv04", "cv05", "cv06", "cv07", "cv08", "cv09", "cv10", "cv12", "cv13", "ss01", "ss02", "ss07"',
-          textWrapMode: "nowrap",
-          textWrapStyle: "auto",
           backgroundColor: "rgb(0, 0, 0)",
-          cornerTopLeftShape: "round",
-          cornerTopRightShape: "round",
-          cornerBottomRightShape: "round",
-          cornerBottomLeftShape: "round",
-          whiteSpaceCollapse: "preserve",
           cursor: "none",
           borderRadius: "0px",
           padding: "0px",
-          margin: "30px 0px 0px 0px",
+          margin: "0px",
           textDecoration: "none",
-          width: "100%",
         }}
       >
-        Akihiko™
+        Develop
       </p>
     </section>
   );

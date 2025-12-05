@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -9,605 +9,585 @@ const Works: React.FC = () => {
   const headingScrollRef = useRef<HTMLUListElement>(null);
   const headingContentRef = useRef<HTMLDivElement>(null);
   const projectCardsRef = useRef<HTMLAnchorElement[]>([]);
+  const scrollAnimationRef = useRef<gsap.core.Tween | null>(null);
+  const buttonRef = useRef<HTMLAnchorElement>(null);
+  const buttonFillRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Animate scrolling heading text
-      if (headingScrollRef.current && headingContentRef.current) {
-        const ul = headingScrollRef.current;
-        const content = headingContentRef.current;
-        const contentWidth = content.offsetWidth; // Use offsetWidth for actual rendered width
-        
-        // Set initial position (matching original transform: matrix(1, 0, 0, 1, -1293.04, 0))
-        gsap.set(ul, {
-          x: -1293.04,
-        });
-        
-        // Animate infinite scroll - move by one content width
-        gsap.to(ul, {
-          x: -1293.04 - contentWidth,
-          duration: 20,
-          ease: 'none',
-          repeat: -1,
-        });
-
-        // Fade in heading on scroll
-        gsap.fromTo(
-          headingScrollRef.current,
-          {
-            opacity: 0,
-            y: 30,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: headingScrollRef.current,
-              start: 'top 90%',
-              toggleActions: 'play none none reverse',
-            },
+      // Wait for DOM to be fully ready and ensure accurate measurements
+      const initAnimations = () => {
+        // Animate scrolling heading text with proper infinite loop
+        if (headingScrollRef.current && headingContentRef.current) {
+          const ul = headingScrollRef.current;
+          const content = headingContentRef.current;
+          
+          // Force reflow to ensure accurate measurements
+          void ul.offsetWidth;
+          void content.offsetWidth;
+          
+          // Get the actual content width with proper measurement
+          const contentWidth = content.getBoundingClientRect().width;
+          
+          // Only proceed if we have a valid width
+          if (contentWidth <= 0) {
+            // Retry after a short delay if width is not ready
+            setTimeout(initAnimations, 50);
+            return;
           }
-        );
-      }
+          
+          // Reset any existing transforms
+          gsap.set(ul, { 
+            x: 0, 
+            clearProps: 'transform',
+            force3D: true, // Enable GPU acceleration
+          });
+          
+          // Kill any existing animation to prevent conflicts
+          if (scrollAnimationRef.current) {
+            scrollAnimationRef.current.kill();
+          }
+          
+          // Create seamless infinite scroll
+          // Since we have 4 copies of the content, we animate by exactly one content width
+          // This creates a perfect seamless loop
+          scrollAnimationRef.current = gsap.to(ul, {
+            x: -contentWidth,
+            duration: 20,
+            ease: 'none',
+            repeat: -1,
+            immediateRender: false, // Prevent initial jump
+            force3D: true, // Enable GPU acceleration for smooth performance
+          });
 
-      // Animate project cards on scroll
-      projectCardsRef.current.forEach((card, index) => {
-        if (card) {
+          // Fade in animation for the heading section
           gsap.fromTo(
-            card,
+            headingScrollRef.current,
             {
               opacity: 0,
-              y: 50,
+              y: 30,
             },
             {
               opacity: 1,
               y: 0,
-              duration: 1,
-              delay: index * 0.1,
-              ease: 'power2.out',
+              duration: 1.2,
+              ease: 'power3.out',
               scrollTrigger: {
-                trigger: card,
-                start: 'top 85%',
+                trigger: headingScrollRef.current,
+                start: 'top 90%',
                 toggleActions: 'play none none reverse',
+                once: true,
               },
             }
           );
         }
+
+        // Animate project cards with parallax and reveal effects
+        projectCardsRef.current.forEach((card, index) => {
+          if (card && !card.dataset.animated) {
+            // Mark as animated to prevent duplicate animations
+            card.dataset.animated = 'true';
+            
+            const imageContainer = card.querySelector('.image-container');
+            const mainImage = card.querySelector('.main-image');
+            const overlayImage = card.querySelector('.overlay-image');
+            const textContent = card.querySelector('.text-content');
+
+            // Card entrance animation - smoother and more sophisticated
+            gsap.fromTo(
+              card,
+              {
+                opacity: 0,
+                y: 80,
+                scale: 0.95,
+              },
+              {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 1.2,
+                delay: index * 0.15,
+                ease: 'power3.out',
+                scrollTrigger: {
+                  trigger: card,
+                  start: 'top 85%',
+                  toggleActions: 'play none none reverse',
+                  once: true,
+                },
+              }
+            );
+
+            // Main image parallax effect - smooth scroll-linked animation
+            if (mainImage && imageContainer) {
+              gsap.fromTo(
+                mainImage,
+                {
+                  scale: 1.2,
+                  y: 50,
+                },
+                {
+                  scale: 1,
+                  y: 0,
+                  duration: 1.5,
+                  ease: 'power2.out',
+                  scrollTrigger: {
+                    trigger: imageContainer,
+                    start: 'top 85%',
+                    end: 'bottom 20%',
+                    scrub: 1,
+                  },
+                }
+              );
+            }
+
+            // Overlay image animation - bouncy entrance effect
+            if (overlayImage) {
+              gsap.fromTo(
+                overlayImage,
+                {
+                  opacity: 0,
+                  scale: 0.8,
+                  x: 50,
+                  y: 50,
+                },
+                {
+                  opacity: 1,
+                  scale: 1,
+                  x: 0,
+                  y: 0,
+                  duration: 1,
+                  ease: 'back.out(1.7)',
+                  delay: 0.3 + (index * 0.15),
+                  scrollTrigger: {
+                    trigger: imageContainer || card,
+                    start: 'top 75%',
+                    toggleActions: 'play none none reverse',
+                    once: true,
+                  },
+                }
+              );
+            }
+
+            // Text reveal animation - smooth fade and slide
+            if (textContent) {
+              gsap.fromTo(
+                textContent,
+                {
+                  opacity: 0,
+                  y: 20,
+                },
+                {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.8,
+                  ease: 'power2.out',
+                  delay: 0.5 + (index * 0.15),
+                  scrollTrigger: {
+                    trigger: card,
+                    start: 'top 75%',
+                    toggleActions: 'play none none reverse',
+                    once: true,
+                  },
+                }
+              );
+            }
+          }
+        });
+      };
+
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        // Small delay to ensure all measurements are accurate
+        setTimeout(initAnimations, 100);
       });
+
+      // Handle window resize to recalculate animations
+      const handleResize = () => {
+        if (headingScrollRef.current && headingContentRef.current) {
+          const ul = headingScrollRef.current;
+          const content = headingContentRef.current;
+          
+          // Force reflow for accurate measurements
+          void ul.offsetWidth;
+          void content.offsetWidth;
+          
+          const contentWidth = content.getBoundingClientRect().width;
+          
+          // Only proceed if we have a valid width
+          if (contentWidth <= 0) return;
+          
+          if (scrollAnimationRef.current) {
+            scrollAnimationRef.current.kill();
+          }
+          
+          gsap.set(ul, { 
+            x: 0,
+            force3D: true,
+          });
+          
+          scrollAnimationRef.current = gsap.to(ul, {
+            x: -contentWidth,
+            duration: 20,
+            ease: 'none',
+            repeat: -1,
+            immediateRender: false,
+            force3D: true,
+          });
+        }
+      };
+
+      // Debounce resize handler
+      let resizeTimeout: ReturnType<typeof setTimeout>;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(handleResize, 250);
+      });
+
+      // Initialize button fill element
+      if (buttonFillRef.current) {
+        gsap.set(buttonFillRef.current, {
+          scaleX: 0,
+          scaleY: 0,
+          transformOrigin: '50% 50%',
+        });
+      }
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        clearTimeout(resizeTimeout);
+      };
     }, sectionRef);
 
-    return () => ctx.revert();
+    return () => {
+      if (scrollAnimationRef.current) {
+        scrollAnimationRef.current.kill();
+      }
+      ctx.revert();
+    };
   }, []);
 
-  const addToCardsRef = (el: HTMLAnchorElement | null) => {
-    if (el) {
+  const addToCardsRef = useCallback((el: HTMLAnchorElement | null) => {
+    if (el && !projectCardsRef.current.includes(el)) {
       projectCardsRef.current.push(el);
     }
+  }, []);
+
+  // Button hover fill animation handler
+  const handleButtonMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!buttonRef.current || !buttonFillRef.current) return;
+
+    const button = buttonRef.current;
+    const fill = buttonFillRef.current;
+    const rect = button.getBoundingClientRect();
+    
+    // Calculate mouse position relative to button
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Determine entry direction based on mouse position relative to center
+    const deltaX = mouseX - centerX;
+    const deltaY = mouseY - centerY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    
+    let originX = '50%';
+    let originY = '50%';
+    
+    // Determine which side the cursor entered from
+    // Use a threshold to determine primary direction
+    if (absX > absY) {
+      // Horizontal entry (left or right)
+      if (deltaX < 0) {
+        // Entered from left
+        originX = '0%';
+        originY = `${(mouseY / rect.height) * 100}%`;
+      } else {
+        // Entered from right
+        originX = '100%';
+        originY = `${(mouseY / rect.height) * 100}%`;
+      }
+    } else {
+      // Vertical entry (top or bottom)
+      if (deltaY < 0) {
+        // Entered from top
+        originX = `${(mouseX / rect.width) * 100}%`;
+        originY = '0%';
+      } else {
+        // Entered from bottom
+        originX = `${(mouseX / rect.width) * 100}%`;
+        originY = '100%';
+      }
+    }
+    
+    // Set transform origin and animate fill
+    gsap.set(fill, {
+      transformOrigin: `${originX} ${originY}`,
+    });
+    
+    // Animate fill expanding from the entry point
+    gsap.to(fill, {
+      scaleX: 1,
+      scaleY: 1,
+      duration: 0.6,
+      ease: 'power2.out',
+    });
+  };
+
+  const handleButtonMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!buttonRef.current || !buttonFillRef.current) return;
+    
+    const button = buttonRef.current;
+    const fill = buttonFillRef.current;
+    const rect = button.getBoundingClientRect();
+    
+    // Calculate exit position
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const deltaX = mouseX - centerX;
+    const deltaY = mouseY - centerY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    
+    let originX = '50%';
+    let originY = '50%';
+    
+    // Determine exit direction
+    if (absX > absY) {
+      if (deltaX < 0) {
+        originX = '0%';
+        originY = `${(mouseY / rect.height) * 100}%`;
+      } else {
+        originX = '100%';
+        originY = `${(mouseY / rect.height) * 100}%`;
+      }
+    } else {
+      if (deltaY < 0) {
+        originX = `${(mouseX / rect.width) * 100}%`;
+        originY = '0%';
+      } else {
+        originX = `${(mouseX / rect.width) * 100}%`;
+        originY = '100%';
+      }
+    }
+    
+    // Set transform origin for exit animation
+    gsap.set(fill, {
+      transformOrigin: `${originX} ${originY}`,
+    });
+    
+    // Animate fill out
+    gsap.to(fill, {
+      scaleX: 0,
+      scaleY: 0,
+      duration: 0.4,
+      ease: 'power2.in',
+    });
   };
 
   return (
       <section
       ref={sectionRef}
-      className="bg-black w-full max-w-[1480px] h-[3088.8px] relative pt-[180px] text-[12px] leading-normal font-sans box-border antialiased cursor-none flex flex-col flex-nowrap content-start justify-center items-start gap-[50px] overflow-x-hidden overflow-y-hidden"
+      className="bg-black w-full max-w-[1480px] min-h-screen lg:h-auto relative pt-12 sm:pt-16 md:pt-24 lg:pt-[180px] pb-12 text-xs sm:text-[12px] leading-normal font-sans box-border antialiased cursor-none flex flex-col flex-nowrap content-start justify-center items-start gap-8 sm:gap-12 lg:gap-[50px] overflow-x-hidden overflow-y-hidden px-4 sm:px-6"
     >
       {/* Top Section Label */}
-      <div className="w-[1480px] h-6 relative flex-shrink-0 flex-grow-0 flex-basis-auto">
-        <div className="flex flex-col flex-nowrap content-center justify-center items-center gap-[10px] w-[1480px] h-6 relative overflow-hidden p-0">
-          <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-between items-center w-[1480px] h-[13px] relative overflow-hidden px-6">
-            <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-start items-center gap-[350px] w-[658.362px] h-[13px] relative overflow-hidden p-0">
-              <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[228.175px] h-[13px] relative overflow-hidden p-0">
-                <div className="relative outline-none flex flex-col flex-shrink-0 justify-start w-[228.175px] h-[13px] whitespace-nowrap flex-grow-0 flex-basis-auto">
-                  <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-[13px] leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-white">
+      <div className="w-full h-auto sm:h-6 relative shrink-0 grow-0 basis-auto">
+        <div className="flex flex-col flex-nowrap content-center justify-center items-center gap-2 sm:gap-[10px] w-full h-auto sm:h-6 relative overflow-hidden p-0">
+          <div className="flex flex-col sm:flex-row flex-nowrap grow-0 shrink-0 basis-auto content-center justify-between items-start sm:items-center w-full h-auto sm:h-[13px] relative overflow-hidden px-0 gap-2 sm:gap-0">
+            <div className="flex flex-col sm:flex-row flex-nowrap grow-0 shrink-0 basis-auto content-center justify-start items-start sm:items-center gap-2 sm:gap-8 md:gap-16 lg:gap-[350px] w-full sm:w-auto h-auto sm:h-[13px] relative overflow-hidden p-0">
+              <div className="flex flex-row flex-nowrap grow-0 shrink-0 basis-auto content-center justify-center items-center gap-2 sm:gap-[10px] w-auto h-auto sm:h-[13px] relative overflow-hidden p-0">
+                <div className="relative outline-none flex flex-col shrink-0 justify-start w-auto whitespace-nowrap grow-0 basis-auto">
+                  <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-white">
                       © Featured Projects プロジェクト
                     </h6>
                   </div>
                 </div>
-              <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[80.1875px] h-[13px] relative overflow-hidden p-0">
-                <div className="relative outline-none flex flex-col flex-shrink-0 justify-start w-[80.1875px] h-[13px] whitespace-nowrap flex-grow-0 flex-basis-auto">
-                  <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-[13px] leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-[#bbbbbb]">
+              <div className="flex flex-row flex-nowrap grow-0 shrink-0 basis-auto content-center justify-center items-center gap-2 sm:gap-[10px] w-auto h-auto sm:h-[13px] relative overflow-hidden p-0">
+                <div className="relative outline-none flex flex-col shrink-0 justify-start w-auto whitespace-nowrap grow-0 basis-auto">
+                  <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-[#bbbbbb]">
                       (WDX® — 03)
                     </h6>
                   </div>
                 </div>
               </div>
-            <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[155.262px] h-[13px] relative overflow-hidden p-0">
-              <div className="relative outline-none flex flex-col flex-shrink-0 justify-start w-[155.262px] h-[13px] whitespace-nowrap flex-grow-0 flex-basis-auto">
-                <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-[13px] leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-[#bbbbbb]">
+            <div className="flex flex-row flex-nowrap grow-0 shrink-0 basis-auto content-center justify-center items-center gap-2 sm:gap-[10px] w-auto h-auto sm:h-[13px] relative overflow-hidden p-0">
+              <div className="relative outline-none flex flex-col shrink-0 justify-start w-auto whitespace-nowrap grow-0 basis-auto">
+                <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-[#bbbbbb]">
                     Creative Development
                   </h6>
                 </div>
               </div>
             </div>
-          <div className="w-[1480px] h-px relative overflow-hidden bg-[rgba(187,187,187,0.2)] flex-grow-0 flex-shrink-0 flex-basis-auto"></div>
-          </div>
+          <div className="w-full h-px relative overflow-hidden bg-[rgba(187,187,187,0.2)] grow-0 shrink-0 basis-auto"></div>
         </div>
+      </div>
 
       {/* Main Content */}
-      <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-0 w-[1480px] h-[2834.8px] relative overflow-hidden p-0">
-        <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[50px] w-[1480px] h-[485.8px] relative overflow-hidden p-0">
+      <div className="flex flex-col flex-nowrap grow-0 shrink-0 basis-auto content-center justify-center items-center gap-0 w-full h-auto relative overflow-hidden p-0">
+        <div className="flex flex-col flex-nowrap grow-0 shrink-0 basis-auto content-start justify-center items-start gap-8 sm:gap-12 lg:gap-[50px] w-full h-auto relative overflow-hidden p-0">
           {/* Scrolling Heading Section */}
-          <div className="w-[1480px] h-[200px] relative flex-grow-0 flex-shrink-0 flex-basis-auto">
-            <div className="flex flex-col flex-nowrap content-center justify-center items-center gap-[10px] w-[1480px] h-[200px] relative overflow-hidden p-0">
-              <div className="w-[1480px] h-[200px] relative flex-grow-0 flex-shrink-0 flex-basis-auto">
-                <section className="w-[1480px] h-[200px] max-w-full max-h-full flex items-center justify-center list-none p-[10px] m-0">
+          <div className="w-full h-[120px] sm:h-[150px] md:h-[180px] lg:h-[200px] relative grow-0 shrink-0 basis-auto">
+            <div className="flex flex-col flex-nowrap content-center justify-center items-center gap-2 sm:gap-[10px] w-full h-full relative overflow-hidden p-0">
+              <div className="w-full h-full relative grow-0 shrink-0 basis-auto">
+                <section className="w-full h-full max-w-full max-h-full flex items-center justify-center list-none p-2 sm:p-[10px] m-0">
                   <ul
                     ref={headingScrollRef}
-                    className="box-border antialiased cursor-none flex w-[1460px] h-[180px] max-w-full max-h-full items-center justify-center list-none gap-0 relative flex-row will-change-transform p-0 m-0"
+                    className="box-border antialiased cursor-none flex w-full h-[calc(100%-20px)] max-w-full max-h-full items-center justify-center list-none gap-0 relative flex-row will-change-transform p-0 m-0"
                   >
-                    <li aria-hidden="false">
-                      <div
-                        ref={headingContentRef}
-                        className="flex flex-row flex-nowrap content-center justify-center items-center gap-[10px] w-[1598.97px] h-[168px] relative overflow-hidden flex-shrink-0 p-0"
-                      >
-                        <div className="relative outline-none flex flex-col flex-shrink-0 justify-start mix-blend-difference whitespace-nowrap flex-grow-0 flex-basis-auto w-[1598.97px] h-[168px] will-change-transform">
-                          <h1 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-[208px] leading-[168px] tracking-[-8px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap"
-                            style={{
-                              fontFeatureSettings: '"salt", "ss01", "ss02", "ss03", "ss04", "ss07"',
-                            }}
-                          >
-                            Featured Works© 
-                          </h1>
+                    {[...Array(4)].map((_, i) => (
+                      <li key={i} aria-hidden={i > 1} className="will-change-transform">
+                        <div
+                          ref={i === 0 ? headingContentRef : undefined}
+                          className="flex flex-row flex-nowrap content-center justify-center items-center gap-2 sm:gap-[10px] w-auto h-full relative overflow-hidden shrink-0 p-0"
+                        >
+                          <div className="relative outline-none flex flex-col shrink-0 justify-start mix-blend-difference whitespace-nowrap grow-0 basis-auto w-auto h-full will-change-transform">
+                            <h1 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[208px] leading-tight sm:leading-[0.8] tracking-tight sm:tracking-[-4px] lg:tracking-[-8px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap"
+                              style={{
+                                fontFeatureSettings: '"salt", "ss01", "ss02", "ss03", "ss04", "ss07"',
+                              }}
+                            >
+                              Featured Works© 
+                            </h1>
                           </div>
                         </div>
                       </li>
-                    <li aria-hidden="false" className="will-change-transform">
-                      <div className="flex flex-row flex-nowrap content-center justify-center items-center gap-[10px] w-[1598.97px] h-[168px] relative overflow-hidden flex-shrink-0 p-0">
-                        <div className="relative outline-none flex flex-col flex-shrink-0 justify-start mix-blend-difference whitespace-nowrap flex-grow-0 flex-basis-auto w-[1598.97px] h-[168px] will-change-transform">
-                          <h1 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-[208px] leading-[168px] tracking-[-8px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap"
-                          style={{
-                              fontFeatureSettings: '"salt", "ss01", "ss02", "ss03", "ss04", "ss07"',
-                            }}
-                          >
-                            Featured Works© 
-                          </h1>
-                          </div>
-                        </div>
-                      </li>
-                    <li aria-hidden="true" className="will-change-transform">
-                      <div className="flex flex-row flex-nowrap content-center justify-center items-center gap-[10px] w-[1598.97px] h-[168px] relative overflow-hidden flex-shrink-0 p-0">
-                        <div className="relative outline-none flex flex-col flex-shrink-0 justify-start mix-blend-difference whitespace-nowrap flex-grow-0 flex-basis-auto w-[1598.97px] h-[168px] will-change-transform">
-                          <h1 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-[208px] leading-[168px] tracking-[-8px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap"
-                          style={{
-                              fontFeatureSettings: '"salt", "ss01", "ss02", "ss03", "ss04", "ss07"',
-                            }}
-                          >
-                            Featured Works© 
-                          </h1>
-                          </div>
-                        </div>
-                      </li>
-                    <li aria-hidden="true" className="will-change-transform">
-                      <div className="flex flex-row flex-nowrap content-center justify-center items-center gap-[10px] w-[1598.97px] h-[168px] relative overflow-hidden flex-shrink-0 p-0">
-                        <div className="relative outline-none flex flex-col flex-shrink-0 justify-start mix-blend-difference whitespace-nowrap flex-grow-0 flex-basis-auto w-[1598.97px] h-[168px] will-change-transform">
-                          <h1 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-[208px] leading-[168px] tracking-[-8px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap"
-                          style={{
-                              fontFeatureSettings: '"salt", "ss01", "ss02", "ss03", "ss04", "ss07"',
-                            }}
-                          >
-                            Featured Works© 
-                          </h1>
-                          </div>
-                        </div>
-                      </li>
-                    </ul>
-                  </section>
-                </div>
+                    ))}
+                  </ul>
+                </section>
               </div>
             </div>
+          </div>
 
-          <div className="w-[1480px] h-px relative overflow-hidden bg-[rgba(187,187,187,0.2)] flex-grow-0 flex-shrink-0 flex-basis-auto"></div>
+          <div className="w-full h-px relative overflow-hidden bg-[rgba(187,187,187,0.2)] grow-0 shrink-0 basis-auto"></div>
 
           {/* Description and Button */}
-          <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[40px] w-[570px] max-w-[570px] h-[184.8px] relative overflow-hidden px-6">
-            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-normal break-words flex-grow-0 flex-basis-auto w-[522px] max-w-[540px] h-[100.8px]">
-              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-[#bbbbbb] text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0">
-                  Every project is a chance to blend design and development,
-                  shaping bold interactive ideas into{" "}
-                <span className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] text-white text-[19px] leading-[25.2px] no-underline">
+          <div className="flex flex-col flex-nowrap grow-0 shrink-0 basis-auto content-start justify-center items-start gap-6 sm:gap-8 lg:gap-[40px] w-full max-w-full sm:max-w-[570px] h-auto relative overflow-hidden px-0">
+            <div className="relative outline-none flex flex-col shrink-0 justify-start whitespace-normal wrap-break-word grow-0 basis-auto w-full max-w-full sm:max-w-[540px] h-auto">
+              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-[#bbbbbb] text-sm sm:text-base md:text-lg lg:text-[19px] leading-relaxed sm:leading-normal lg:leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0">
+                  Every project is a chance to architect full-stack solutions,
+                  transforming complex requirements into{" "}
+                <span className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] text-white text-sm sm:text-base md:text-lg lg:text-[19px] leading-relaxed sm:leading-normal lg:leading-[25.2px] no-underline">
                   <strong className="box-border antialiased cursor-none font-bold">
-                      sleek digital{" "}
-                    <br />
-                      realities — built with
+                      robust applications{" "}
+                    <br className="hidden sm:block" />
+                      — built with{" "}
                     </strong>
                   </span>
-                  intent, speed, and visual clarity that attracts lot of
-                  peoples.
+                  precision, efficiency, and scalable architecture that delivers
+                  exceptional performance.
                 </p>
               </div>
-            <div className="w-[167.1px] h-11 relative flex-grow-0 flex-shrink-0 flex-basis-auto">
+            <div className="w-auto sm:w-[167.1px] h-10 sm:h-11 relative grow-0 shrink-0 basis-auto">
                 <a
-                  href="./work"
-                className="will-change-auto flex justify-center w-[167.1px] h-11 overflow-hidden rounded-[259px] relative no-underline box-border antialiased cursor-none flex-row flex-nowrap content-center items-center gap-[10px] p-0"
-              >
-                <div className="absolute top-[47.9875px] left-0 right-0 overflow-visible h-[6px] bg-white rounded-[30px] flex-grow-0 flex-shrink-0 flex-basis-auto"></div>
-                <div className="mix-blend-difference flex-grow-0 flex-shrink-0 flex-basis-auto w-[167.1px] h-11 relative">
-                  <div className="flex items-center justify-center w-[167.1px] h-11 overflow-hidden p-3">
-                    <p className="align-top flex overflow-hidden w-[131.1px] text-[23px] uppercase select-none text-shadow-[rgb(255,255,255)_0px_20px_0px]">
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          S
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          E
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          E
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                        {" "}
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          W
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          O
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          R
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          K
-                        </span>
-                      <span className="block backface-hidden whitespace-pre flex-shrink-0 font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-bold text-[23px] leading-5 tracking-[-0.3px] text-white">
-                          S
-                        </span>
+                  ref={buttonRef}
+                  href="./works"
+                  onMouseEnter={handleButtonMouseEnter}
+                  onMouseLeave={handleButtonMouseLeave}
+                  className="will-change-auto flex justify-center w-auto sm:w-[167.1px] h-10 sm:h-11 overflow-hidden rounded-full sm:rounded-[259px] relative no-underline box-border antialiased cursor-pointer flex-row flex-nowrap content-center items-center gap-2 sm:gap-[10px] px-6 sm:px-0 p-0 border border-white"
+                >
+                  {/* Fill effect element */}
+                  <div
+                    ref={buttonFillRef}
+                    className="absolute inset-0 bg-white rounded-full sm:rounded-[259px] scale-0"
+                    style={{
+                      transformOrigin: '50% 50%',
+                    }}
+                  />
+                  <div className="absolute top-[47.9875px] left-0 right-0 overflow-visible h-[6px] bg-white rounded-[30px] hidden sm:block"></div>
+                  <div className="mix-blend-difference w-auto sm:w-[167.1px] h-10 sm:h-11 relative z-10">
+                    <div className="flex items-center justify-center w-full h-full overflow-hidden p-3">
+                      <p className="text-sm sm:text-[23px] uppercase font-bold tracking-tight sm:tracking-[-0.3px] text-white">
+                        SEE WORKS
                       </p>
                     </div>
                   </div>
                 </a>
-              </div>
-            </div>
-          </div>
-
-        {/* Projects Grid */}
-        <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-start items-start gap-0 w-[1480px] h-[2349px] relative overflow-hidden px-6">
-          <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[160px] w-[1432px] h-[2349px] relative overflow-hidden p-0">
-            {/* Row 1 */}
-            <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-between items-start w-[1432px] h-[849px] relative overflow-hidden p-0">
-              {/* Sonder Goods */}
-              <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[716px] h-[849px] relative overflow-hidden pt-[100px]">
-                <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[20px] w-[716px] h-[749px] relative p-0">
-                    <a
-                      href="./work/sonder-goods"
-                    ref={addToCardsRef}
-                    className="flex-grow-0 flex-shrink-0 flex-basis-auto justify-start w-[716px] h-[749px] relative no-underline box-border antialiased cursor-none flex-row flex-nowrap content-center items-center gap-[10px] p-0"
-                  >
-                    <div className="flex-grow flex-shrink-0 flex-basis-0 w-[716px] h-[749px] relative">
-                      <div className="flex flex-col flex-nowrap content-start justify-center items-start gap-[14px] w-[716px] h-[749px] relative overflow-hidden p-0">
-                        <div className="will-change-auto flex flex-col flex-nowrap flex-grow flex-shrink-0 flex-basis-0 content-center justify-center items-center gap-[10px] w-[716px] h-[709.8px] relative overflow-hidden bg-black rounded-[10px] p-0">
-                          <div className="z-[1] flex-grow-0 flex-shrink-0 flex-basis-auto w-[716px] h-[709.8px] absolute top-0 left-0 overflow-visible">
-                            <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                <img
-                                  decoding="auto"
-                                  width="896"
-                                  height="1280"
-                                  sizes="max((min(100vw, 1480px) - 48px) * 0.5014, 1px)"
-                                srcSet="https://framerusercontent.com/images/wA52DtSvQDx894hqLZv4ezfKfz8.png?scale-down-to=1024 716w,https://framerusercontent.com/images/wA52DtSvQDx894hqLZv4ezfKfz8.png 896w"
-                                  src="https://framerusercontent.com/images/wA52DtSvQDx894hqLZv4ezfKfz8.png"
-                                  alt="Rocks"
-                                className="w-[716px] h-[709.8px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                              />
-                              </div>
-                            </div>
-                          <div className="will-change-auto flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[358px] h-[354.9px] relative overflow-hidden rounded-[10px] p-0">
-                            <div className="z-[1] flex-grow flex-shrink-0 flex-basis-0 w-[358px] h-[354.9px] relative">
-                              <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                  <img
-                                    decoding="auto"
-                                    width="1024"
-                                    height="1024"
-                                    sizes="max(max((min(100vw, 1480px) - 48px) * 0.5014, 1px) / 2, 1px)"
-                                  srcSet="https://framerusercontent.com/images/WSIwyrpSzX4O0fiESBwPTjSWBE.png?scale-down-to=512 512w,https://framerusercontent.com/images/WSIwyrpSzX4O0fiESBwPTjSWBE.png 1024w"
-                                    src="https://framerusercontent.com/images/WSIwyrpSzX4O0fiESBwPTjSWBE.png"
-                                    alt="Man"
-                                  className="w-[358px] h-[354.9px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                                />
-                                </div>
-                              </div>
-                            </div>
-                            </div>
-                        <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-between items-center w-[716px] h-[25.2px] relative overflow-hidden p-0">
-                          <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-start items-center gap-0 w-[120.875px] h-[25px] relative overflow-hidden p-0">
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[120.875px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Sonder Goods
-                                </p>
-                              </div>
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[120.875px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Sonder Goods
-                                </p>
-                              </div>
-                            </div>
-                          <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[30.7125px] h-[25.2px]">
-                            <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                (01)
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-
-              {/* Halo Wear */}
-              <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[501.2px] h-[390px] relative overflow-hidden p-0">
-                <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[20px] w-[501.2px] h-[390px] relative p-0">
-                    <a
-                      href="./work/halo-wear"
-                    ref={addToCardsRef}
-                    className="flex-grow-0 flex-shrink-0 flex-basis-auto justify-start w-[501.2px] h-[390px] relative no-underline box-border antialiased cursor-none flex-row flex-nowrap content-center items-center gap-[10px] p-0"
-                  >
-                    <div className="flex-grow flex-shrink-0 flex-basis-0 w-[501.2px] h-[390px] relative">
-                      <div className="flex flex-col flex-nowrap content-start justify-center items-start gap-[14px] w-[501.2px] h-[390px] relative overflow-hidden p-0">
-                        <div className="will-change-auto flex flex-col flex-nowrap flex-grow flex-shrink-0 flex-basis-0 content-center justify-center items-center gap-[10px] w-[501.2px] h-[350.8px] relative overflow-hidden bg-black rounded-[10px] p-0">
-                          <div className="z-[1] flex-grow-0 flex-shrink-0 flex-basis-auto w-[501.2px] h-[350.8px] absolute top-0 left-0 overflow-visible">
-                            <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                <img
-                                  decoding="auto"
-                                  width="1408"
-                                  height="768"
-                                  sizes="max((min(100vw, 1480px) - 48px) * 0.3506, 1px)"
-                                srcSet="https://framerusercontent.com/images/IhwR33YbJAKylGnbmoCW4maBHI.png?scale-down-to=512 512w,https://framerusercontent.com/images/IhwR33YbJAKylGnbmoCW4maBHI.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/IhwR33YbJAKylGnbmoCW4maBHI.png 1408w"
-                                  src="https://framerusercontent.com/images/IhwR33YbJAKylGnbmoCW4maBHI.png"
-                                  alt="Man B&W"
-                                className="w-[501.2px] h-[350.8px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                              />
-                              </div>
-                            </div>
-                          <div className="will-change-auto flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[250.6px] h-[175.4px] relative overflow-hidden rounded-[10px] p-0">
-                            <div className="z-[1] flex-grow flex-shrink-0 flex-basis-0 w-[250.6px] h-[175.4px] relative">
-                              <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                  <img
-                                    decoding="auto"
-                                    width="1280"
-                                    height="896"
-                                    sizes="max(max((min(100vw, 1480px) - 48px) * 0.3506, 1px) / 2, 1px)"
-                                  srcSet="https://framerusercontent.com/images/tkYEeCoj1udozbnzQynoaYqCI.png?scale-down-to=512 512w,https://framerusercontent.com/images/tkYEeCoj1udozbnzQynoaYqCI.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/tkYEeCoj1udozbnzQynoaYqCI.png 1280w"
-                                    src="https://framerusercontent.com/images/tkYEeCoj1udozbnzQynoaYqCI.png"
-                                    alt="Woman Side Pose"
-                                  className="w-[250.6px] h-[175.4px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                                />
-                                </div>
-                              </div>
-                            </div>
-                            </div>
-                        <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-between items-center w-[501.2px] h-[25.2px] relative overflow-hidden p-0">
-                          <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-start items-center gap-0 w-[87.1875px] h-[25px] relative overflow-hidden p-0">
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[87.1875px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Halo Wear
-                                </p>
-                              </div>
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[87.1875px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Halo Wear
-                                </p>
-                              </div>
-                            </div>
-                          <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[34.55px] h-[25.2px]">
-                            <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                (02)
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-            {/* Row 2 */}
-            <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[1432px] h-[590px] relative overflow-hidden p-0">
-              {/* Lucent Lab */}
-              <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[20px] w-[458.237px] h-[590px] relative p-0">
-                  <a
-                    href="./work/lucent-lab"
-                  ref={addToCardsRef}
-                  className="flex-grow-0 flex-shrink-0 flex-basis-auto justify-start w-[458.237px] h-[590px] relative no-underline box-border antialiased cursor-none flex-row flex-nowrap content-center items-center gap-[10px] p-0"
-                >
-                  <div className="flex-grow flex-shrink-0 flex-basis-0 w-[458.237px] h-[590px] relative">
-                    <div className="flex flex-col flex-nowrap content-start justify-center items-start gap-[14px] w-[458.237px] h-[590px] relative overflow-hidden p-0">
-                      <div className="will-change-auto flex flex-col flex-nowrap flex-grow flex-shrink-0 flex-basis-0 content-center justify-center items-center gap-[10px] w-[458.237px] h-[550.8px] relative overflow-hidden bg-black rounded-[10px] p-0">
-                        <div className="z-[1] flex-grow-0 flex-shrink-0 flex-basis-auto w-[458.237px] h-[550.8px] absolute top-0 left-0 overflow-visible">
-                          <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                              <img
-                                decoding="auto"
-                                width="768"
-                                height="1408"
-                                sizes="max((min(100vw, 1480px) - 48px) * 0.3218, 1px)"
-                              srcSet="https://framerusercontent.com/images/G891sPJdh93gPfGSBboEt88Now.png?scale-down-to=1024 558w,https://framerusercontent.com/images/G891sPJdh93gPfGSBboEt88Now.png 768w"
-                                src="https://framerusercontent.com/images/G891sPJdh93gPfGSBboEt88Now.png"
-                                alt="Pool"
-                              className="w-[458.237px] h-[550.8px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                            />
-                            </div>
-                          </div>
-                        <div className="will-change-auto flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[229.113px] h-[275.4px] relative overflow-hidden rounded-[10px] p-0">
-                          <div className="z-[1] flex-grow flex-shrink-0 flex-basis-0 w-[229.113px] h-[275.4px] relative">
-                            <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                <img
-                                  decoding="auto"
-                                  width="1200"
-                                  height="673"
-                                  sizes="max(max((min(100vw, 1480px) - 48px) * 0.3218, 1px) / 2, 1px)"
-                                srcSet="https://framerusercontent.com/images/YIi7jRxIe8p6gLtM1ZMNpJyVYs.jpeg?scale-down-to=512 512w,https://framerusercontent.com/images/YIi7jRxIe8p6gLtM1ZMNpJyVYs.jpeg?scale-down-to=1024 1024w,https://framerusercontent.com/images/YIi7jRxIe8p6gLtM1ZMNpJyVYs.jpeg 1200w"
-                                  src="https://framerusercontent.com/images/YIi7jRxIe8p6gLtM1ZMNpJyVYs.jpeg"
-                                  alt="Woman Side Pose"
-                                className="w-[229.113px] h-[275.4px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                              />
-                              </div>
-                            </div>
-                          </div>
-                          </div>
-                      <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-between items-center w-[458.237px] h-[25.2px] relative overflow-hidden p-0">
-                        <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-start items-center gap-0 w-[94.175px] h-[25px] relative overflow-hidden p-0">
-                          <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[94.175px] h-[25.2px]">
-                            <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                Lucent Lab
-                              </p>
-                            </div>
-                          <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[94.175px] h-[25.2px]">
-                            <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                Lucent Lab
-                              </p>
-                            </div>
-                          </div>
-                        <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[35.1625px] h-[25.2px]">
-                          <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                              (03)
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </a>
-                </div>
-              </div>
-
-            {/* Row 3 */}
-            <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-end justify-between items-end w-[1432px] h-[590px] relative overflow-hidden p-0">
-              {/* Arc & Bloom */}
-              <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[458.237px] h-[490px] relative overflow-hidden pt-[100px]">
-                <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[20px] w-[458.237px] h-[390px] relative p-0">
-                    <a
-                      href="./work/arc-bloom"
-                    ref={addToCardsRef}
-                    className="flex-grow-0 flex-shrink-0 flex-basis-auto justify-start w-[458.237px] h-[390px] relative no-underline box-border antialiased cursor-none flex-row flex-nowrap content-center items-center gap-[10px] p-0"
-                  >
-                    <div className="flex-grow flex-shrink-0 flex-basis-0 w-[458.237px] h-[390px] relative">
-                      <div className="flex flex-col flex-nowrap content-start justify-center items-start gap-[14px] w-[458.237px] h-[390px] relative overflow-hidden p-0">
-                        <div className="will-change-auto flex flex-col flex-nowrap flex-grow flex-shrink-0 flex-basis-0 content-center justify-center items-center gap-[10px] w-[458.237px] h-[350.8px] relative overflow-hidden bg-black rounded-[10px] p-0">
-                          <div className="z-[1] flex-grow-0 flex-shrink-0 flex-basis-auto w-[458.237px] h-[350.8px] absolute top-0 left-0 overflow-visible">
-                            <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                <img
-                                  decoding="auto"
-                                  width="1280"
-                                  height="896"
-                                  sizes="max((min(100vw, 1480px) - 48px) * 0.3218, 1px)"
-                                srcSet="https://framerusercontent.com/images/kSBqNFitJQuBzXuk7tl1FqlAHhs.png?scale-down-to=512 512w,https://framerusercontent.com/images/kSBqNFitJQuBzXuk7tl1FqlAHhs.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/kSBqNFitJQuBzXuk7tl1FqlAHhs.png 1280w"
-                                  src="https://framerusercontent.com/images/kSBqNFitJQuBzXuk7tl1FqlAHhs.png"
-                                  alt="Woman Side Pose"
-                                className="w-[458.237px] h-[350.8px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                              />
-                              </div>
-                            </div>
-                          <div className="will-change-auto flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[229.113px] h-[175.4px] relative overflow-hidden rounded-[10px] p-0">
-                            <div className="z-[1] flex-grow flex-shrink-0 flex-basis-0 w-[229.113px] h-[175.4px] relative">
-                              <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                  <img
-                                    decoding="auto"
-                                    width="1280"
-                                    height="896"
-                                    sizes="max(max((min(100vw, 1480px) - 48px) * 0.3218, 1px) / 2, 1px)"
-                                  srcSet="https://framerusercontent.com/images/Jt7zqgTjQMYT15YvEkLGKiF9Cw.png?scale-down-to=512 512w,https://framerusercontent.com/images/Jt7zqgTjQMYT15YvEkLGKiF9Cw.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/Jt7zqgTjQMYT15YvEkLGKiF9Cw.png 1280w"
-                                    src="https://framerusercontent.com/images/Jt7zqgTjQMYT15YvEkLGKiF9Cw.png"
-                                    alt="Woman On The Chair"
-                                  className="w-[229.113px] h-[175.4px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                                />
-                                </div>
-                              </div>
-                            </div>
-                            </div>
-                        <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-between items-center w-[458.237px] h-[25.2px] relative overflow-hidden p-0">
-                          <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-start items-center gap-0 w-[103.912px] h-[25px] relative overflow-hidden p-0">
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[103.912px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Arc & Bloom
-                                </p>
-                              </div>
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[103.912px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Arc & Bloom
-                                </p>
-                              </div>
-                            </div>
-                          <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[35.6375px] h-[25.2px]">
-                            <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                (04)
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-
-              {/* Atelier Nara */}
-              <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[458.237px] h-[590px] relative overflow-hidden pt-[100px]">
-                <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-start justify-center items-start gap-[20px] w-[458.237px] h-[490px] relative p-0">
-                    <a
-                      href="./work/atelier-nara"
-                    ref={addToCardsRef}
-                    className="flex-grow-0 flex-shrink-0 flex-basis-auto justify-start w-[458.237px] h-[490px] relative no-underline box-border antialiased cursor-none flex-row flex-nowrap content-center items-center gap-[10px] p-0"
-                  >
-                    <div className="flex-grow flex-shrink-0 flex-basis-0 w-[458.237px] h-[490px] relative">
-                      <div className="flex flex-col flex-nowrap content-start justify-center items-start gap-[14px] w-[458.237px] h-[490px] relative overflow-hidden p-0">
-                        <div className="will-change-auto flex flex-col flex-nowrap flex-grow flex-shrink-0 flex-basis-0 content-center justify-center items-center gap-[10px] w-[458.237px] h-[450.8px] relative overflow-hidden bg-black rounded-[10px] p-0">
-                          <div className="z-[1] flex-grow-0 flex-shrink-0 flex-basis-auto w-[458.237px] h-[450.8px] absolute top-0 left-0 overflow-visible">
-                            <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                <img
-                                  decoding="auto"
-                                  width="1024"
-                                  height="1024"
-                                  sizes="max((min(100vw, 1480px) - 48px) * 0.3218, 1px)"
-                                srcSet="https://framerusercontent.com/images/svmMd86RbsKfib7KzvpKAUsHrk.png?scale-down-to=512 512w,https://framerusercontent.com/images/svmMd86RbsKfib7KzvpKAUsHrk.png 1024w"
-                                  src="https://framerusercontent.com/images/svmMd86RbsKfib7KzvpKAUsHrk.png"
-                                  alt="Glass Mirror"
-                                className="w-[458.237px] h-[450.8px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                              />
-                              </div>
-                            </div>
-                          <div className="will-change-auto flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-center items-center gap-[10px] w-[229.113px] h-[225.4px] relative overflow-hidden rounded-[10px] p-0">
-                            <div className="z-[1] flex-grow flex-shrink-0 flex-basis-0 w-[229.113px] h-[225.4px] relative">
-                              <div className="absolute top-0 right-0 bottom-0 left-0 rounded-none">
-                                  <img
-                                    decoding="auto"
-                                    width="1024"
-                                    height="1024"
-                                    sizes="max(max((min(100vw, 1480px) - 48px) * 0.3218, 1px) / 2, 1px)"
-                                  srcSet="https://framerusercontent.com/images/7WVAcnCw5jrTdcET3CmMrpU7gf0.png?scale-down-to=512 512w,https://framerusercontent.com/images/7WVAcnCw5jrTdcET3CmMrpU7gf0.png 1024w"
-                                    src="https://framerusercontent.com/images/7WVAcnCw5jrTdcET3CmMrpU7gf0.png"
-                                    alt="Woman"
-                                  className="w-[229.113px] h-[225.4px] block box-border antialiased cursor-none object-cover object-center rounded-none"
-                                />
-                                </div>
-                              </div>
-                            </div>
-                            </div>
-                        <div className="flex flex-row flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-between items-center w-[458.237px] h-[25.2px] relative overflow-hidden p-0">
-                          <div className="flex flex-col flex-nowrap flex-grow-0 flex-shrink-0 flex-basis-auto content-center justify-start items-center gap-0 w-[98.125px] h-[25px] relative overflow-hidden p-0">
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[98.125px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Atelier Nara
-                                </p>
-                              </div>
-                            <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[98.125px] h-[25.2px]">
-                              <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                  Atelier Nara
-                                </p>
-                              </div>
-                            </div>
-                          <div className="relative outline-none flex flex-col flex-shrink-0 justify-start whitespace-nowrap flex-grow-0 flex-basis-auto w-[34.75px] h-[25.2px]">
-                            <p className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[19px] leading-[25.2px] text-left box-border antialiased cursor-none p-0 m-0 no-underline whitespace-nowrap">
-                                (05)
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-      </section>
+
+        {/* Projects Grid - Responsive */}
+        <div className="flex flex-col flex-nowrap grow-0 shrink-0 basis-auto content-start justify-start items-start gap-0 w-full h-auto relative overflow-hidden px-0 mt-8 sm:mt-12 lg:mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 w-full">
+            {/* Project 1 - INSPACE */}
+            <a
+              href="https://inspace.itk.ac.id/"
+              ref={addToCardsRef}
+              className="group w-full h-auto relative no-underline box-border antialiased cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              <div className="w-full h-auto relative">
+                <div className="flex flex-col gap-3 sm:gap-4 w-full h-auto relative overflow-hidden">
+                  <div className="image-container w-full aspect-4/5 md:aspect-4/5 lg:aspect-3/4 relative overflow-hidden bg-black rounded-lg sm:rounded-xl">
+                    <img
+                      decoding="auto"
+                      loading="lazy"
+                      src="/src/assets/space.jpg"
+                      alt="INSPACE"
+                      className="main-image w-full h-full object-cover will-change-transform"
+                    />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:bottom-4 lg:right-4 w-[75%] sm:w-[70%] md:w-[70%] lg:w-[50%] aspect-square overflow-hidden rounded-lg z-10 will-change-transform">
+                      <img
+                        src="/src/assets/mockup3.png"
+                        alt="INSPACE Detail"
+                        className="overlay-image w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-content flex justify-between items-center w-full">
+                    <p className="font-['Inter_Display'] font-medium text-white text-sm sm:text-base lg:text-lg">
+                      INSPACE
+                    </p>
+                    <p className="font-['Inter_Display'] font-medium text-white text-sm sm:text-base lg:text-lg">
+                      (01)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </a>
+
+            {/* Project 2 - SIRTERA 24 */}
+            <a
+              href="https://sirtera24.com/"
+              ref={addToCardsRef}
+              className="group w-full h-auto relative no-underline box-border antialiased cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              <div className="w-full h-auto relative">
+                <div className="flex flex-col gap-3 sm:gap-4 w-full h-auto relative overflow-hidden">
+                  <div className="image-container w-full aspect-4/5 md:aspect-4/5 lg:aspect-video relative overflow-hidden bg-black rounded-lg sm:rounded-xl">
+                    <img
+                      decoding="auto"
+                      loading="lazy"
+                      src="/src/assets/beach.jpg"
+                      alt="SIRTERA 24"
+                      className="main-image w-full h-full object-cover will-change-transform"
+                    />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:bottom-4 lg:right-4 w-[75%] sm:w-[70%] md:w-[70%] lg:w-[55%] aspect-square sm:aspect-square md:aspect-square lg:aspect-video overflow-hidden rounded-lg z-10 will-change-transform">
+                      <img
+                        src="/src/assets/mockup2.png"
+                        alt="SIRTERA 24 Detail"
+                        className="overlay-image w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-content flex justify-between items-center w-full">
+                    <p className="font-['Inter_Display'] font-medium text-white text-sm sm:text-base lg:text-lg">
+                      SIRTERA 24
+                    </p>
+                    <p className="font-['Inter_Display'] font-medium text-white text-sm sm:text-base lg:text-lg">
+                      (02)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 

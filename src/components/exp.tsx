@@ -14,34 +14,22 @@ const Experience: React.FC = () => {
 
   const experiences = [
     {
-      company: 'Clavmen Studio',
-      year: '2022 - present',
-      role: 'Art Director & Designer',
-      location: 'Tokyo'
+      company: 'PT. Wulandari Bangun Laksa (WBL)',
+      year: 'January 2022 - March 2022',
+      role: 'IT Support Intern',
+      location: 'Indonesia'
     },
     {
-      company: 'Modular Eight',
-      year: '2020 – 2022',
-      role: 'Senior Developer',
-      location: 'Osaka'
+      company: 'INSPACE Committee',
+      year: '2024 – 2025',
+      role: 'Fullstack Web Developer',
+      location: 'Indonesia'
     },
     {
-      company: 'Haus of Signal',
-      year: '2018 – 2020',
-      role: 'Creative Technologist',
-      location: 'Berlin'
-    },
-    {
-      company: 'Studio Orbit',
-      year: '2016 – 2018',
-      role: 'UI/UX Designer',
-      location: 'Dallas'
-    },
-    {
-      company: 'Novaform Labs',
-      year: '2014 – 2016',
-      role: 'Junior Designer',
-      location: 'Kyoto'
+      company: 'Institut Teknologi Kalimantan (ITK)',
+      year: 'February 2025 – January 2025',
+      role: 'Asisstant Lecturer',
+      location: 'Indonesia'
     }
   ];
 
@@ -117,39 +105,88 @@ const Experience: React.FC = () => {
         );
       }
 
-      // Animate scrolling text bar
+      // Animate scrolling text bar with seamless infinite loop
       if (scrollingContentRef.current) {
         const content = scrollingContentRef.current;
-        const contentWidth = content.scrollWidth;
         
-        // Create infinite scroll animation
-        gsap.to(content, {
-          x: -contentWidth / 2,
-          duration: 20,
-          ease: 'none',
-          repeat: -1,
-        });
-
-        // Fade in the bar on scroll
-        gsap.fromTo(
-          scrollingBarRef.current,
-          {
-            opacity: 0,
-            y: 20,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: scrollingBarRef.current,
-              start: 'top 90%',
-              toggleActions: 'play none none reverse',
-            },
+        // Wait for layout to calculate accurate widths
+        const calculateAndAnimate = () => {
+          // Force a reflow to ensure accurate measurements
+          void content.offsetWidth;
+          
+          // Get all child elements
+          const children = Array.from(content.children) as HTMLElement[];
+          
+          // We have 4 items in the first set: "Global", "Creative Collabs", "Studio", "Creative Partnerships"
+          // And 4 duplicates, so we need at least 8 children
+          if (children.length >= 8) {
+            // Calculate the width of one complete set (first 4 items)
+            // Measure from the start of first item to the start of the 5th item (duplicate)
+            const firstItem = children[0];
+            const duplicateStartItem = children[4];
+            
+            if (firstItem && duplicateStartItem) {
+              // Get the exact distance between the start of first set and duplicate set
+              // This includes the width of all 4 items plus the gaps between them
+              const firstSetWidth = duplicateStartItem.offsetLeft - firstItem.offsetLeft;
+              
+              // Verify the calculation is valid
+              if (firstSetWidth > 0) {
+                // Set initial position to 0 with hardware acceleration for smooth performance
+                gsap.set(content, { x: 0, force3D: true });
+                
+                // Create seamless infinite scroll animation
+                // How it works:
+                // 1. We animate from x: 0 to x: -firstSetWidth
+                // 2. At x: -firstSetWidth, the duplicate set is visually at position 0
+                //    (exactly where the original set started)
+                // 3. GSAP's repeat: -1 automatically resets to x: 0
+                // 4. Since the duplicate is now at position 0, the reset is visually seamless
+                gsap.to(content, {
+                  x: -firstSetWidth,
+                  duration: 20,
+                  ease: 'none', // Linear easing for constant speed
+                  repeat: -1, // Infinite repeat
+                  // Disable repeat refresh to prevent recalculation on each loop
+                  // This ensures the animation values stay consistent for seamless looping
+                  repeatRefresh: false,
+                  // Use force3D for GPU acceleration (better performance, smoother animation)
+                  force3D: true,
+                });
+              }
+            }
           }
-        );
+        };
+        
+        // Use double requestAnimationFrame to ensure DOM is fully laid out and measured
+        // This is crucial for accurate width calculations, especially with:
+        // - Responsive gaps (gap-8 sm:gap-12 md:gap-16 lg:gap-32)
+        // - Dynamic font sizes
+        // - Flexbox layout calculations
+        requestAnimationFrame(() => {
+          requestAnimationFrame(calculateAndAnimate);
+        });
       }
+
+      // Fade in the bar on scroll
+      gsap.fromTo(
+        scrollingBarRef.current,
+        {
+          opacity: 0,
+          y: 20,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: scrollingBarRef.current,
+            start: 'top 90%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
     }, sectionRef);
 
     return () => ctx.revert();
@@ -164,14 +201,14 @@ const Experience: React.FC = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="bg-black w-full relative py-20 lg:py-32 overflow-hidden"
+      className="bg-black w-full relative py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden"
     >
-      <div className="relative z-10 max-w-[1440px] mx-auto px-6">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6">
         {/* Top Section Label */}
-        <div className="py-16 lg:py-20 mb-8">
+        <div className="py-12 sm:py-16 lg:py-20 mb-6 md:mb-8">
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent mb-4" />
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-8 lg:gap-32">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-8 lg:gap-32">
               <span className="text-xs sm:text-sm font-semibold tracking-wider text-white uppercase">
                 © Experience エクスペリエンス
               </span>
@@ -188,72 +225,50 @@ const Experience: React.FC = () => {
 
         {/* Heading Section */}
         <div className="mb-12 lg:mb-16">
-          <div className="flex flex-col lg:flex-row items-start justify-between gap-8">
-            <div className="flex-1 max-w-4xl">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-6 md:gap-8">
+            <div className="flex-1 max-w-4xl w-full">
               <h2 
                 ref={headingRef}
-                className="text-7xl sm:text-8xl lg:text-9xl xl:text-[168px] font-semibold leading-[0.9] tracking-[-0.02em] text-white mix-blend-difference"
+                className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[168px] font-semibold leading-[0.9] tracking-[-0.02em] text-white mix-blend-difference"
               >
                 Experience.
               </h2>
-            </div>
-            <div 
-              ref={imageRef}
-              className="shrink-0 w-32 h-48 lg:w-36 lg:h-52 relative group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-xl overflow-hidden">
-                <img
-                  src="https://framerusercontent.com/images/Lb6dFhKJo6UvYVXUafcZv0n5E.jpg?width=1792&height=2560"
-                  alt="Man Back Pose"
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
-                />
-              </div>
-              {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent rounded-xl" />
-              {/* Logo overlay */}
-              <div className="absolute -bottom-2 -left-10 w-32 h-6 mix-blend-difference z-10">
-                <img
-                  src="https://framerusercontent.com/images/4oaOsuXcxdhxXiQToWWNNSmbM.png?scale-down-to=512&width=513&height=91"
-                  alt="Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
             </div>
           </div>
         </div>
 
         {/* Tags Section - Scrolling Text Bar */}
-        <div ref={scrollingBarRef} className="mb-16 lg:mb-24 -mx-6">
-          <div className="relative w-full h-6 bg-white overflow-hidden">
+        <div ref={scrollingBarRef} className="mb-12 md:mb-16 lg:mb-24 -mx-6">
+          <div className="relative w-full h-5 sm:h-6 bg-white overflow-hidden">
             <div className="absolute inset-0 bg-white" />
             <div 
               ref={scrollingContentRef}
-              className="flex items-center justify-center gap-16 lg:gap-32 h-full relative z-10"
+              className="flex items-center justify-center gap-8 sm:gap-12 md:gap-16 lg:gap-32 h-full relative z-10"
             >
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Global
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                Full-Stack Solutions
               </span>
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Creative Collabs
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                Backend Engineering
               </span>
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Studio
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                Frontend Development
               </span>
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Creative Partnerships
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                System Architecture
               </span>
               {/* Duplicate for seamless loop */}
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Global
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                Full-Stack Solutions
               </span>
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Creative Collabs
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                Backend Engineering
               </span>
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Studio
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                Frontend Development
               </span>
-              <span className="text-sm lg:text-base font-semibold leading-6 text-black whitespace-nowrap">
-                Creative Partnerships
+              <span className="text-xs sm:text-sm md:text-base font-semibold leading-5 sm:leading-6 text-black whitespace-nowrap">
+                System Architecture
               </span>
             </div>
           </div>
@@ -271,33 +286,25 @@ const Experience: React.FC = () => {
                   isLast ? 'border-b' : ''
                 }`}
               >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:py-6 gap-4 sm:gap-0">
-                  {/* Left Side */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 sm:gap-16 lg:gap-32 flex-1">
-                    <div className="w-full sm:w-48">
-                      <span className="text-lg sm:text-xl lg:text-2xl font-normal text-white group-hover:text-white/90 transition-colors">
-                        {exp.company}
-                      </span>
-                    </div>
-                    <div className="w-full sm:w-48">
-                      <span className="text-lg sm:text-xl lg:text-2xl font-normal text-white/80 group-hover:text-white/70 transition-colors">
-                        {exp.year}
-                      </span>
-                    </div>
+                <div className="flex flex-row items-start justify-between py-4 sm:py-5 md:py-6">
+                  {/* Left Side - Company and Role */}
+                  <div className="flex flex-col items-start flex-1 min-w-0 pr-6 sm:pr-8 md:pr-12">
+                    <span className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-normal text-white group-hover:text-white/90 transition-colors leading-none">
+                      {exp.company}
+                    </span>
+                    <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-normal text-white/80 group-hover:text-white/70 transition-colors leading-none mt-1 sm:mt-1.5 md:mt-2 pl-3 sm:pl-4 md:pl-6">
+                      {exp.role}
+                    </span>
                   </div>
 
-                  {/* Right Side */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 sm:gap-16 lg:gap-32 flex-1 justify-end">
-                    <div className="w-full sm:w-48">
-                      <span className="text-lg sm:text-xl lg:text-2xl font-normal text-white/80 group-hover:text-white/70 transition-colors">
-                        {exp.role}
-                      </span>
-                    </div>
-                    <div className="w-full sm:w-48 text-left sm:text-right">
-                      <span className="text-lg sm:text-xl lg:text-2xl font-normal text-white/80 group-hover:text-white/70 transition-colors">
-                        {exp.location}
-                      </span>
-                    </div>
+                  {/* Right Side - Year and Location */}
+                  <div className="flex flex-col items-end shrink-0 text-right min-w-[100px] sm:min-w-[120px] md:min-w-[140px] lg:min-w-[160px]">
+                    <span className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-normal text-white/80 group-hover:text-white/70 transition-colors leading-none">
+                      {exp.year}
+                    </span>
+                    <span className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-normal text-white/80 group-hover:text-white/70 transition-colors leading-none mt-1 sm:mt-1.5 md:mt-2 pr-3 sm:pr-4 md:pr-6">
+                      {exp.location}
+                    </span>
                   </div>
                 </div>
               </div>

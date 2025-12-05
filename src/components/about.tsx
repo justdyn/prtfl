@@ -1,6 +1,17 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { 
+  SiPhp, 
+  SiTypescript, 
+  SiJavascript, 
+  SiLaravel, 
+  SiReact, 
+  SiNodedotjs, 
+  SiMysql, 
+  SiPostgresql, 
+  SiGit 
+} from 'react-icons/si';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -145,17 +156,16 @@ const About: React.FC = () => {
     }
   }, []);
 
-  const clientLogos = [
-    { name: 'Client 1', logo: 'https://framerusercontent.com/images/liDp6RqOmZpoiyriU2da9i9ZRNM.png' },
-    { name: 'Client 2', logo: 'https://framerusercontent.com/images/6IX9srHugK666NPKQJythMbMME.png?width=282&height=58' },
-    { name: 'Client 3', logo: 'https://framerusercontent.com/images/3cl6kEyD2XtSr3RQpeBuJPLW0DA.png?width=225&height=63' },
-    { name: 'Client 4', logo: 'https://framerusercontent.com/images/np97j2F8KUZ2HLiullJ6eZCAlsQ.png?width=303&height=67' },
-    { name: 'Client 5', logo: 'https://framerusercontent.com/images/f0y1IAXP7xxPZoecHyx9XHFdiHA.png?width=258&height=66' },
-    { name: 'Client 6', logo: 'https://framerusercontent.com/images/liDp6RqOmZpoiyriU2da9i9ZRNM.png' },
-    { name: 'Client 7', logo: 'https://framerusercontent.com/images/6IX9srHugK666NPKQJythMbMME.png?width=282&height=58' },
-    { name: 'Client 8', logo: 'https://framerusercontent.com/images/3cl6kEyD2XtSr3RQpeBuJPLW0DA.png?width=225&height=63' },
-    { name: 'Client 9', logo: 'https://framerusercontent.com/images/np97j2F8KUZ2HLiullJ6eZCAlsQ.png?width=303&height=67' },
-    { name: 'Client 10', logo: 'https://framerusercontent.com/images/f0y1IAXP7xxPZoecHyx9XHFdiHA.png?width=258&height=66' },
+  const skills = [
+    { name: 'PHP', icon: SiPhp },
+    { name: 'Typescript', icon: SiTypescript },
+    { name: 'Javascript', icon: SiJavascript },
+    { name: 'Laravel', icon: SiLaravel },
+    { name: 'React.js', icon: SiReact },
+    { name: 'Node.js', icon: SiNodedotjs },
+    { name: 'Mysql', icon: SiMysql },
+    { name: 'PostgreSql', icon: SiPostgresql },
+    { name: 'Git', icon: SiGit },
   ];
 
   return (
@@ -177,7 +187,7 @@ const About: React.FC = () => {
               </span>
             </div>
             <span className="text-xs sm:text-sm font-semibold tracking-wider text-white/80 uppercase">
-              Digital Designer
+              Fullstack Developer
             </span>
           </div>
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -187,16 +197,16 @@ const About: React.FC = () => {
         <div className="mb-16 lg:mb-24">
           <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-16">
             <span className="tag-item text-sm lg:text-base font-semibold text-white/90 hover:text-white transition-colors cursor-default">
-              Visual
+              Full-Stack
             </span>
             <span className="tag-item text-sm lg:text-base font-semibold text-white/90 hover:text-white transition-colors cursor-default">
-              Freelancer
+              System Architect
             </span>
             <span className="tag-item text-sm lg:text-base font-semibold text-white/90 hover:text-white transition-colors cursor-default">
-              Digital Nomad
+              Code Craftsman
             </span>
             <span className="tag-item text-sm lg:text-base font-semibold text-white/90 hover:text-white transition-colors cursor-default">
-              Creative Developer
+              Solution Builder
             </span>
           </div>
         </div>
@@ -210,7 +220,7 @@ const About: React.FC = () => {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black">
               <img
-                src="/src/assets/profile2.jpg"
+                src="/src/assets/profile.jpg"
                 alt="Profile"
                 className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
               />
@@ -225,12 +235,13 @@ const About: React.FC = () => {
           <div className="flex-1 w-full lg:max-w-[929px] pt-8 lg:pt-12">
             {/* Heading */}
             <div className="mb-12 lg:mb-20">
-              <h2 
+              {/* Introduction Section - Big Text */}
+              <p 
                 ref={headingRef}
-                className="text-4xl sm:text-5xl lg:text-6xl font-medium leading-tight tracking-tight text-white mb-8 lg:mb-10 mix-blend-difference"
+                className="text-base sm:text-lg lg:text-xl text-white/70 leading-relaxed font-normal mb-8 lg:mb-10"
               >
-                13+ years™ of digital form, sharp interactions, and relentless creative discipline and effort.
-              </h2>
+                I'm <span className="text-white font-medium">Dyno Fadillah Ramadhani</span>, a Full-Stack Developer currently pursuing my studies in college. I'm passionate about crafting scalable architectures, seamless integrations, and robust solutions that bridge frontend innovation with backend excellence.
+              </p>
               <a
                 ref={buttonRef}
                 href="./contact"
@@ -241,41 +252,40 @@ const About: React.FC = () => {
               </a>
             </div>
 
-            {/* Client Logos Section */}
+            {/* Skills Section */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-0">
-              {clientLogos.map((client, index) => (
-                <div
-                  key={index}
-                  ref={addToLogosRef}
-                  className="h-[120px] sm:h-[140px] lg:h-[151px] border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center justify-center p-4 group relative overflow-hidden"
-                >
-                  {/* Hover effect background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Logo container */}
-                  <div className="relative z-10 w-14 h-5 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
-                    <img
-                      src={client.logo}
-                      alt={client.name}
-                      className="w-full h-full object-contain filter brightness-0 invert"
-                    />
-                  </div>
+              {skills.map((skill, index) => {
+                const IconComponent = skill.icon;
+                return (
+                  <div
+                    key={index}
+                    ref={addToLogosRef}
+                    className="h-[120px] sm:h-[140px] lg:h-[151px] border border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center justify-center p-4 group relative overflow-hidden"
+                  >
+                    {/* Hover effect background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Skill icon */}
+                    <div className="relative z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                      <IconComponent className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-white" />
+                    </div>
 
-                  {/* Corner accent */}
-                  {index === 0 && (
-                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white/20" />
-                  )}
-                  {index === 4 && (
-                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white/20" />
-                  )}
-                  {index === 5 && (
-                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white/20" />
-                  )}
-                  {index === 9 && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-white/20" />
-                  )}
-                </div>
-              ))}
+                    {/* Corner accent */}
+                    {index === 0 && (
+                      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white/20" />
+                    )}
+                    {index === 4 && (
+                      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white/20" />
+                    )}
+                    {index === 5 && (
+                      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white/20" />
+                    )}
+                    {index === 8 && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-white/20" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
