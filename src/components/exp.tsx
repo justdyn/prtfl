@@ -212,9 +212,6 @@ const Experience: React.FC = () => {
               <span className="text-xs sm:text-sm font-semibold tracking-wider text-white uppercase">
                 © Experience エクスペリエンス
               </span>
-              <span className="text-xs sm:text-sm font-semibold tracking-wider text-white/60 uppercase">
-                (WDX® — 05)
-              </span>
             </div>
             <span className="text-xs sm:text-sm font-semibold tracking-wider text-white/80 uppercase">
               Digital Craft

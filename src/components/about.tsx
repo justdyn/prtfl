@@ -182,9 +182,6 @@ const About: React.FC = () => {
               <span className="text-xs sm:text-sm font-semibold tracking-wider text-white uppercase">
                 © Curated Interfaces ビジュアル
               </span>
-              <span className="text-xs sm:text-sm font-semibold tracking-wider text-white/60 uppercase">
-                (WDX® — 02)
-              </span>
             </div>
             <span className="text-xs sm:text-sm font-semibold tracking-wider text-white/80 uppercase">
               Fullstack Developer

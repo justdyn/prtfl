@@ -345,9 +345,6 @@ const Story: React.FC = () => {
               <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] text-white whitespace-nowrap">
                 © PERSONAL PROFILE プロフィール
               </h6>
-              <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] text-white whitespace-nowrap">
-                (WDX®-05)
-              </h6>
             </div>
               <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] text-white whitespace-nowrap">
                 FULLSTACK DEVELOPER

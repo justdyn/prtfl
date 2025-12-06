@@ -408,9 +408,6 @@ const Works: React.FC = () => {
                 </div>
               <div className="flex flex-row flex-nowrap grow-0 shrink-0 basis-auto content-center justify-center items-center gap-2 sm:gap-[10px] w-auto h-auto sm:h-[13px] relative overflow-hidden p-0">
                 <div className="relative outline-none flex flex-col shrink-0 justify-start w-auto whitespace-nowrap grow-0 basis-auto">
-                  <h6 className="font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-normal text-xs sm:text-[13px] leading-tight sm:leading-[13px] uppercase text-left box-border antialiased cursor-none p-0 m-0 no-underline text-[#bbbbbb]">
-                      (WDX® — 03)
-                    </h6>
                   </div>
                 </div>
               </div>

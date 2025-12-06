@@ -397,9 +397,6 @@ const Footer: React.FC = () => {
             <span className="text-[11px] xs:text-xs sm:text-[12px] md:text-[13px] lg:text-[13.2px] font-semibold leading-tight sm:leading-[17px] tracking-[0.1px] text-white whitespace-nowrap">
               © Final Section クロージング
             </span>
-            <span className="text-[11px] xs:text-xs sm:text-[12px] md:text-[13px] lg:text-[13.2px] font-semibold leading-tight sm:leading-[17px] tracking-[0.1px] text-white whitespace-nowrap">
-              (WDX® — 12)
-            </span>
           </div>
         </div>
         
