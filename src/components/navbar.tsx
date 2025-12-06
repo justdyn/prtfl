@@ -105,12 +105,12 @@ const Navbar: React.FC = () => {
           <div ref={infoRef} className="hidden sm:flex flex-col gap-1 sm:gap-[3px]">
             <div className="text-white">
               <span className="text-xs sm:text-[13.2px] font-semibold leading-tight sm:leading-[17px] tracking-[0.1px]">
-                Based in Tokyo 東京
+                Based in Indonesia 
               </span>
             </div>
             <div className="text-[#999999]">
               <span className="text-xs sm:text-[13px] font-semibold leading-tight sm:leading-[17px] tracking-[0.1px]">
-                Art Director + Framer Developer
+                College Student + Full-Stack Developer
               </span>
             </div>
           </div>

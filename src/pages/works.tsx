@@ -7,61 +7,135 @@ gsap.registerPlugin(ScrollTrigger);
 
 const Works: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const countRef = useRef<HTMLDivElement>(null);
+  const desktopHeadingRef = useRef<HTMLDivElement>(null);
+  const desktopCountRef = useRef<HTMLDivElement>(null);
+  const mobileHeadingRef = useRef<HTMLDivElement>(null);
+  const mobileCountRef = useRef<HTMLDivElement>(null);
   const projectCardsRef = useRef<HTMLDivElement[]>([]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Animate heading section with stagger
-      if (headingRef.current) {
-        const headingLines = headingRef.current.querySelectorAll('h1');
-        gsap.fromTo(
-          headingLines,
-          {
-            opacity: 0,
-            y: 100,
-            clipPath: 'inset(0% 0% 100% 0%)',
-          },
-          {
-            opacity: 1,
-            y: 0,
-            clipPath: 'inset(0% 0% 0% 0%)',
-            duration: 1.2,
-            stagger: 0.15,
-            ease: 'power3.out',
+      // Desktop Sticky Heading Section - Sophisticated Animation
+      if (desktopHeadingRef.current && desktopCountRef.current) {
+        const desktopHeading = desktopHeadingRef.current.querySelector('h1');
+        const desktopCount = desktopCountRef.current.querySelector('h3');
+        // Get the desktop container by traversing up the DOM tree
+        const desktopContainer = desktopHeadingRef.current.parentElement?.parentElement?.parentElement;
+
+        if (desktopHeading && desktopContainer) {
+          // Create a master timeline for coordinated animations
+          const desktopTimeline = gsap.timeline({
             scrollTrigger: {
-              trigger: headingRef.current,
+              trigger: desktopContainer,
               start: 'top 80%',
+              end: 'top 20%',
               toggleActions: 'play none none reverse',
+              once: false,
             },
+          });
+
+          // Animate heading with smooth reveal - using opacity and transform to prevent text clipping
+          desktopTimeline
+            .fromTo(
+              desktopHeading,
+              {
+                opacity: 0,
+                y: 60,
+                scale: 0.98,
+              },
+              {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 1.4,
+                ease: 'power3.out',
+              },
+              0
+            );
+
+          // Animate count with elegant entrance
+          if (desktopCount) {
+            desktopTimeline.fromTo(
+              desktopCount,
+              {
+                opacity: 0,
+                scale: 0.6,
+                rotation: -8,
+                x: -20,
+              },
+              {
+                opacity: 1,
+                scale: 1,
+                rotation: 0,
+                x: 0,
+                duration: 1.2,
+                ease: 'back.out(1.4)',
+              },
+              0.3
+            );
           }
-        );
+        }
       }
 
-      // Animate count
-      if (countRef.current) {
-        gsap.fromTo(
-          countRef.current,
-          {
-            opacity: 0,
-            scale: 0.5,
-            rotation: -10,
-          },
-          {
-            opacity: 1,
-            scale: 1,
-            rotation: 0,
-            duration: 1,
-            ease: 'back.out(1.7)',
-            delay: 0.4,
+      // Mobile/Tablet Heading Section - Optimized Animation
+      if (mobileHeadingRef.current && mobileCountRef.current) {
+        const mobileHeading = mobileHeadingRef.current.querySelector('h1');
+        const mobileCount = mobileCountRef.current.querySelector('h3');
+        // Get the mobile container by traversing up the DOM tree
+        const mobileContainer = mobileHeadingRef.current.parentElement;
+
+        if (mobileHeading && mobileContainer) {
+          // Create timeline for mobile animations
+          const mobileTimeline = gsap.timeline({
             scrollTrigger: {
-              trigger: countRef.current,
+              trigger: mobileContainer,
               start: 'top 85%',
               toggleActions: 'play none none reverse',
+              once: true,
             },
+          });
+
+          // Mobile heading animation - faster and more responsive
+          mobileTimeline
+            .fromTo(
+              mobileHeading,
+              {
+                opacity: 0,
+                y: 40,
+                scale: 0.95,
+              },
+              {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 1.1,
+                ease: 'power3.out',
+              },
+              0
+            );
+
+          // Mobile count animation
+          if (mobileCount) {
+            mobileTimeline.fromTo(
+              mobileCount,
+              {
+                opacity: 0,
+                scale: 0.5,
+                rotation: -5,
+                x: -15,
+              },
+              {
+                opacity: 1,
+                scale: 1,
+                rotation: 0,
+                x: 0,
+                duration: 0.9,
+                ease: 'back.out(1.5)',
+              },
+              0.2
+            );
           }
-        );
+        }
       }
 
       // Animate project cards with parallax and reveal effects
@@ -210,8 +284,8 @@ const Works: React.FC = () => {
           <div className="flex flex-row flex-nowrap items-end justify-start flex-1 shrink-0 w-full lg:w-[666px] lg:h-[336px] relative overflow-hidden p-0">
             <div className="contents">
               <div
-                ref={headingRef}
-                className="relative outline-none flex flex-col shrink-0 justify-start mix-blend-difference whitespace-nowrap grow-0 basis-auto w-full lg:w-[561.05px] lg:h-[336px] transform-none"
+                ref={desktopHeadingRef}
+                className="relative outline-none flex flex-col shrink-0 justify-start mix-blend-difference whitespace-nowrap grow-0 basis-auto w-full lg:w-[561.05px] lg:h-[336px] transform-none will-change-[opacity,transform] overflow-visible"
               >
                 <h1 className="box-border antialiased font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-[120px] md:text-[160px] lg:text-[208px] leading-[0.8] tracking-[-0.04em] text-left whitespace-nowrap bg-transparent p-0 m-0 no-underline [font-feature-settings:'salt','ss01','ss02','ss03','ss04','ss07']">
                   All
@@ -222,8 +296,8 @@ const Works: React.FC = () => {
             </div>
             <div className="flex flex-col flex-nowrap items-center justify-center grow-0 shrink-0 basis-auto gap-2.5 w-[56.5625px] h-[168.6px] relative overflow-hidden pb-[118px]">
               <div
-                ref={countRef}
-                className="relative outline-none flex flex-col shrink-0 justify-start mix-blend-difference whitespace-nowrap grow-0 basis-auto w-[56.5625px] h-[50.6px] transform-none"
+                ref={desktopCountRef}
+                className="relative outline-none flex flex-col shrink-0 justify-start mix-blend-difference whitespace-nowrap grow-0 basis-auto w-[56.5625px] h-[50.6px] transform-none will-change-[opacity,transform]"
               >
                 <h3 className="box-border antialiased font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[32px] md:text-[40px] lg:text-[49px] leading-[50.6px] tracking-[-0.8px] text-start whitespace-nowrap bg-transparent p-0 m-0 no-underline [font-feature-settings:'cv01','cv02','cv03','cv04','cv05','cv06','cv08','cv10','cv12','cv13','ss02','ss03','ss07']">
                   (2)
@@ -235,14 +309,14 @@ const Works: React.FC = () => {
 
         {/* Mobile/Tablet Heading - Left-aligned at top */}
         <div className="lg:hidden w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-start justify-start">
-          <div ref={headingRef} className="relative w-full flex flex-col items-start justify-start">
+          <div ref={mobileHeadingRef} className="relative w-full flex flex-col items-start justify-start will-change-[opacity,transform] overflow-visible">
             <div className="relative flex items-start justify-start gap-3 sm:gap-4">
               <h1 className="box-border antialiased font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-semibold text-white text-[60px] sm:text-[80px] md:text-[100px] leading-[0.8] tracking-[-0.04em] text-left whitespace-nowrap bg-transparent p-0 m-0 no-underline [font-feature-settings:'salt','ss01','ss02','ss03','ss04','ss07'] mix-blend-difference">
                 All
                 <br className="box-border antialiased" />
                 Works
               </h1>
-              <div ref={countRef} className="mix-blend-difference flex items-start pt-2 sm:pt-3">
+              <div ref={mobileCountRef} className="mix-blend-difference flex items-start pt-2 sm:pt-3 will-change-[opacity,transform]">
                 <h3 className="box-border antialiased font-['Inter_Display','Inter_Display_Placeholder',sans-serif] font-medium text-white text-[24px] sm:text-[28px] md:text-[32px] leading-none tracking-[-0.8px] text-start whitespace-nowrap bg-transparent p-0 m-0 no-underline [font-feature-settings:'cv01','cv02','cv03','cv04','cv05','cv06','cv08','cv10','cv12','cv13','ss02','ss03','ss07']">
                   (2)
                 </h3>
