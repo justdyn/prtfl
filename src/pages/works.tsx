@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import AppLayout from "../layouts/app-layout";
+import spaceImage from '../assets/space.jpg';
+import mockup3Image from '../assets/mockup3.png';
+import beachImage from '../assets/beach.jpg';
+import mockup2Image from '../assets/mockup2.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -258,8 +262,8 @@ const Works: React.FC = () => {
       title: "INSPACE",
       number: "(01)",
       description: "Competition and Tikecting Talk Show Website",
-      mainImage: "/src/assets/space.jpg",
-      overlayImage: "/src/assets/mockup1.jpg",
+      mainImage: spaceImage,
+      overlayImage: mockup3Image,
       aspectRatio: "portrait",
     },
     {
@@ -267,8 +271,8 @@ const Works: React.FC = () => {
       title: "SIRTERA 24",
       number: "(02)",
       description: "News and Document Making Website",
-      mainImage: "/src/assets/beach.jpg",
-      overlayImage: "/src/assets/mockup2.png",
+      mainImage: beachImage,
+      overlayImage: mockup2Image,
       aspectRatio: "landscape",
     },
   ];

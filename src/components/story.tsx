@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import image2 from '../assets/2.png';
+import image4 from '../assets/4.jpg';
+import profile2Image from '../assets/profile2.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -367,7 +370,7 @@ const Story: React.FC = () => {
               width="896"
               height="1280"
               sizes="(max-width: 480px) 120px, (max-width: 640px) 140px, (max-width: 768px) 180px, (max-width: 1024px) 220px, 326px"
-              src="/src/assets/2.png"
+              src={image2}
               alt="Man Back Pose"
               className="box-border antialiased cursor-none block rounded-[8px] sm:rounded-[10px] object-cover object-[50%_50%] w-full h-full"
               loading="lazy"
@@ -386,7 +389,7 @@ const Story: React.FC = () => {
               width="896"
               height="1280"
               sizes="(max-width: 480px) 130px, (max-width: 640px) 150px, (max-width: 768px) 200px, (max-width: 1024px) 280px, 454px"
-              src="/src/assets/4.jpg"
+              src={image4}
               alt="Black Man"
               className="box-border antialiased cursor-none block rounded-[8px] sm:rounded-[10px] object-cover object-[50%_50%] w-full h-full"
               loading="lazy"
@@ -405,7 +408,7 @@ const Story: React.FC = () => {
               width="896"
               height="1280"
               sizes="(max-width: 480px) 120px, (max-width: 640px) 140px, (max-width: 768px) 180px, (max-width: 1024px) 220px, 326px"
-              src="/src/assets/profile2.jpg"
+              src={profile2Image}
               alt="Woman"
               className="box-border antialiased cursor-none block rounded-[8px] sm:rounded-[10px] object-cover object-[50%_50%] w-full h-full"
               loading="lazy"

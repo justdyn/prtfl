@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import AppLayout from "../layouts/app-layout";
+import image3 from '../assets/3.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -355,8 +356,7 @@ const Contact: React.FC = () => {
                 width="896"
                 height="1280"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 400px, 490px"
-                srcSet="/src/assets/3.png?scale-down-to=512 512w, /src/assets/3.png?scale-down-to=1024 716w,/src/assets/3.png 896w"
-                src="/src/assets/3.png"
+                src={image3}
                 alt="Woman Staircase"
                 className="w-full h-full block box-border antialiased object-cover object-center rounded-none"
               />

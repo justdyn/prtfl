@@ -12,6 +12,7 @@ import {
   SiPostgresql, 
   SiGit 
 } from 'react-icons/si';
+import profileImage from '../assets/profile.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -217,7 +218,7 @@ const About: React.FC = () => {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black">
               <img
-                src="/src/assets/profile.jpg"
+                src={profileImage}
                 alt="Profile"
                 className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500"
               />

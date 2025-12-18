@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import spaceImage from '../assets/space.png';
+import mockup3Image from '../assets/mockup3.png';
+import beachImage from '../assets/beach.jpg';
+import mockup2Image from '../assets/mockup2.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -522,13 +526,13 @@ const Works: React.FC = () => {
                     <img
                       decoding="auto"
                       loading="lazy"
-                      src="/src/assets/space.jpg"
+                      src={spaceImage}
                       alt="INSPACE"
                       className="main-image w-full h-full object-cover will-change-transform"
                     />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:bottom-4 lg:right-4 w-[75%] sm:w-[70%] md:w-[70%] lg:w-[50%] aspect-square overflow-hidden rounded-lg z-10 will-change-transform">
                       <img
-                        src="/src/assets/mockup3.png"
+                        src={mockup3Image}
                         alt="INSPACE Detail"
                         className="overlay-image w-full h-full object-cover"
                       />
@@ -558,13 +562,13 @@ const Works: React.FC = () => {
                     <img
                       decoding="auto"
                       loading="lazy"
-                      src="/src/assets/beach.jpg"
+                      src={beachImage}
                       alt="SIRTERA 24"
                       className="main-image w-full h-full object-cover will-change-transform"
                     />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:top-auto lg:left-auto lg:translate-x-0 lg:translate-y-0 lg:bottom-4 lg:right-4 w-[75%] sm:w-[70%] md:w-[70%] lg:w-[55%] aspect-square sm:aspect-square md:aspect-square lg:aspect-video overflow-hidden rounded-lg z-10 will-change-transform">
                       <img
-                        src="/src/assets/mockup2.png"
+                        src={mockup2Image}
                         alt="SIRTERA 24 Detail"
                         className="overlay-image w-full h-full object-cover"
                       />
